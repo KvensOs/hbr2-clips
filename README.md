@@ -30,7 +30,7 @@ game's own sound files.
 ## Installation
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/KvensOs/hbr2-clips
 cd hbr2-clips
 npm install
 ```
