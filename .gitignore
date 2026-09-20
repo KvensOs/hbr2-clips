@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# generated clips and audio
+out/
+
+# HaxBall's own resource archive, get your own copy (see README)
+assets/res.dat
+
+# replays, except the sample
+*.hbr2
+!samples/*.hbr2
+
+# logs
+npm-debug.log*
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
