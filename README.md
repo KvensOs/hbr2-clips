@@ -17,7 +17,8 @@ game's own sound files.
 - Same look as the client: pitch textures, team colors, avatars, kick ring, camera easing
 - Audio placed at the exact tick of each kick and goal, with the crowd volume following the
   client's own logic (it swells on goals and on dangerous plays)
-- H.264 + AAC mp4 that plays anywhere, 60 fps by default (one frame per game tick)
+- H.264 + AAC mp4 that plays anywhere, 60 fps by default (one frame per game tick), or a GIF
+- Camera option that stays on the ball instead of the game's slow follow
 - Scorer, own goal flag, score and match time for every clip, handy for captions
 
 ## Requirements
@@ -61,8 +62,14 @@ npm run extract -- replay.hbr2 --goal 2 --fps 30 --size 1280x720 --zoom 1.8
 | Option | Default | Description |
 | --- | --- | --- |
 | `--goal N` | all goals | Only render goal number N |
-| `--fps N` | `60` | Frames per second. 60 draws every game tick, 30 halves the work |
+| `--before S` | `5` | Seconds before the goal |
+| `--after S` | `2` | Seconds after the goal |
+| `--fps N` | `60` | Frames per second, rounded to a divisor of 60 (60, 30, 20, 15...). 60 draws every game tick, 30 halves the work |
 | `--zoom X` | `1.5` | Camera zoom |
+| `--camera C` | `game` | `game` is the client's own camera, `ball` keeps the ball close to the center |
+| `--smooth N` | `0.2` | Only with `--camera ball`. Fraction of the way to the ball the camera covers per tick, above 0 and up to 1 (locked on the ball). The game itself uses 0.04 |
+| `--format F` | `mp4` | `mp4` or `gif`. A GIF has no audio and is capped at 30 fps |
+| `--gif-width N` | `640` | GIF width in pixels, the frames are scaled down to it. 0 keeps the render size |
 | `--size WxH` | `960x540` | Output resolution |
 | `--res path` | `assets/res.dat` | Path to `res.dat` |
 | `--no-sound` | | Video only |
@@ -79,7 +86,8 @@ const clips = await extractGoalClips('replay.hbr2', 'out', { fps: 30, overlays: 
 ```
 
 The output directory has to exist. Options are the same as the CLI flags: `width`, `height`,
-`zoom`, `fps`, `preS`, `postS`, `sound`, `crowd`, `overlays`, `onlyGoal` and `resDat`.
+`zoom`, `fps`, `preS`, `postS`, `camera`, `smooth`, `format`, `gifWidth`, `sound`, `crowd`,
+`overlays`, `onlyGoal` and `resDat`.
 
 It resolves to one object per goal:
 
@@ -123,6 +131,12 @@ It resolves to one object per goal:
 ## Notes
 
 - A replay with 7 goals takes about a minute at 960x540 and 60 fps on a laptop with a Ryzen 5.
+- The game's own camera eases toward the ball 4% per frame, so on fast plays the ball drifts away
+  from the center, more so the higher the zoom. `--camera ball` fixes that. Try `--smooth 0.1` for
+  a softer follow or `0.5` for an almost locked one. The camera still stops at the stadium
+  edges, like in the game.
+- GIFs are big compared to an mp4 because of the pitch texture. Lower `--gif-width` or `--fps`
+  to shrink them.
 - Avatar emoji and the goal text use system fonts. On Linux without an emoji font the emoji
   come out monochrome, and with Arial Black installed the text matches the game.
 - node-haxball reads replays of version 3. If HaxBall changes the format, run
