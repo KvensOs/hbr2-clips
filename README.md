@@ -1,5 +1,9 @@
 # hbr2-clips
 
+![Node](https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js&logoColor=white)
+![ffmpeg](https://img.shields.io/badge/ffmpeg-incluido-informational)
+![Licencia](https://img.shields.io/badge/licencia-ISC-blue)
+
 Renderiza clips mp4 (o gif) de los goles de una repetición de HaxBall (`.hbr2`), usando el
 propio renderer y los sonidos del juego. También puede juntar todos los goles en un solo video.
 
@@ -9,6 +13,12 @@ Tres formas de usarlo, según lo que necesites:
 2. **Librería** — para tu propio bot de Discord u otro proyecto de Node.
 3. **API HTTP** — para una página web, un bot en un panel de hosting sin terminal (Pterodactyl,
    Apollo, etc.), o cualquier cliente que no sea Node.
+
+**Índice:** [Requisitos](#requisitos) · [CLI](#1-uso-por-línea-de-comandos) ·
+[Librería](#2-como-librería-bot-propio-script-etc) · [API HTTP](#3-api-http-página-web-bot-en-hosting-sin-terminal-cualquier-lenguaje) ·
+[Opciones de render](#opciones-de-render) · [Notas](#notas) · [Licencia](#licencia)
+
+---
 
 ## Requisitos
 
@@ -26,6 +36,8 @@ Tres formas de usarlo, según lo que necesites:
 npm install
 ```
 
+---
+
 ## 1. Uso por línea de comandos
 
 ```bash
@@ -38,6 +50,8 @@ node src/extractGoalClip.js replay.hbr2 [--goal N | --goal 1,2,3] [--merge] [--b
 Sin `--goal`, renderiza todos los goles del replay. Los clips salen en `out/` (más el video
 combinado, `out/all.mp4`, si pasás `--merge`). El detalle de cada flag está en la
 [tabla de opciones](#opciones-de-render) más abajo.
+
+---
 
 ## 2. Como librería (bot propio, script, etc.)
 
@@ -67,6 +81,8 @@ Usando la librería directo tenés además `resDat` por si querés apuntar a un 
 por llamada — es la única opción que sigue siendo exclusiva de este modo, porque tiene más
 sentido como configuración del servidor que como parámetro por pedido.
 
+---
+
 ## 3. API HTTP (página web, bot en hosting sin terminal, cualquier lenguaje)
 
 ```bash
@@ -82,14 +98,14 @@ producción).
 ### Endpoints
 
 | Método | Ruta | Qué hace |
-|---|---|---|
-| GET | `/health` | chequeo simple, devuelve `{ ok: true }` |
-| POST | `/api/replays` | sube un `.hbr2` (campo multipart `replay`) y devuelve su lista de goles |
-| GET | `/api/replays/:id` | vuelve a consultar un replay ya subido |
-| POST | `/api/replays/:id/render` | encola el render de algunos o todos los goles |
-| GET | `/api/jobs/:id` | consulta el progreso y las URLs de descarga de un render |
-| GET | `/files/:jobId/:filename` | descarga un archivo ya renderizado |
-| DELETE | `/api/replays/:id` | borra un replay subido antes de que expire solo |
+|:---:|---|---|
+| `GET` | `/health` | chequeo simple, devuelve `{ ok: true }` |
+| `POST` | `/api/replays` | sube un `.hbr2` (campo multipart `replay`) y devuelve su lista de goles |
+| `GET` | `/api/replays/:id` | vuelve a consultar un replay ya subido |
+| `POST` | `/api/replays/:id/render` | encola el render de algunos o todos los goles |
+| `GET` | `/api/jobs/:id` | consulta el progreso y las URLs de descarga de un render |
+| `GET` | `/files/:jobId/:filename` | descarga un archivo ya renderizado |
+| `DELETE` | `/api/replays/:id` | borra un replay subido antes de que expire solo |
 
 ### Flujo
 
@@ -128,6 +144,8 @@ Los archivos se sirven desde la propia API en `mergedUrl` / `files[i].url`; una 
 necesita hacer `fetch` a esos tres endpoints, y un bot puede simplemente descargar la URL final y
 adjuntarla.
 
+---
+
 ## Opciones de render
 
 Válido para los tres modos de uso (CLI, librería y API), aunque no todas las opciones están
@@ -151,12 +169,16 @@ expuestas en los tres lugares — la columna correspondiente queda vacía cuando
 | Ambiente de público de fondo | `--no-crowd` | `crowd` | `true` |
 | `res.dat` alternativo | `--res ruta` | `resDat` *(solo librería)* | `assets/res.dat` |
 
+---
+
 ## Notas
 
 - Los replays y renders subidos se guardan solo en memoria/disco temporal y se borran solos
   pasado `MAX_AGE_MINUTES` — no hay que limpiar nada a mano.
 - No hay autenticación por defecto. Si vas a exponer la API fuera de tu red local, ponele algo
   delante (proxy con API key, o agregá tu propio middleware de auth en `server/index.js`).
+
+---
 
 ## Licencia
 
