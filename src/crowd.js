@@ -1,12 +1,12 @@
 'use strict';
 
-// Crowd volume, ported from the official client. The game loops crowd.ogg and only moves its
-// gain around:
-//   - target 1.0 during the goal celebration (150 ticks)
-//   - target 0.3 on a "danger" play (see dangerFromPositions)
-//   - a target lasts ~166 ms unless renewed, then goes back to 0
-//   - the real gain eases toward the target (2.5% every ~17 ms) and is cut to 0 under 0.05
-// One step per tick is close enough to the client's 17 ms timer.
+// Volumen del público, portado del cliente oficial. El juego repite crowd.ogg en loop y solo
+// mueve la ganancia:
+//   - objetivo 1.0 durante la celebración de gol (150 ticks)
+//   - objetivo 0.3 en una jugada de "peligro" (ver dangerFromPositions)
+//   - un objetivo dura ~166 ms si no se renueva, después vuelve a 0
+//   - la ganancia real se acerca al objetivo (2.5% cada ~17 ms) y se corta a 0 por debajo de 0.05
+// Un paso por tick es lo bastante cercano al timer de 17 ms del cliente.
 const CELEBRATION_TICKS = 150;
 const STEP_MS = 17;
 const HOLD_MS = 166.66666666666666;
@@ -20,7 +20,7 @@ class CrowdModel {
 
   _set(v) { this.target = v; this.holdMs = HOLD_MS; this.running = true; }
 
-  // call once per tick, returns the gain (0..1) for that tick
+  // se llama una vez por tick, devuelve la ganancia (0..1) de ese tick
   step({ celebrating, danger }) {
     if (celebrating) this._set(1);
     else if (danger) this._set(0.3);
@@ -34,14 +34,14 @@ class CrowdModel {
   }
 }
 
-// Same rule the client uses, copied as is. Red attacks toward +x, blue toward -x.
-//   A) red's closest player to the ball and the ball are past blue's deepest player
-//      (highest x) and the ball is at x > 20
-//   B) blue's closest player and the ball are left of red's highest-x player and the ball
-//      is at x < -20
-// Yes, B compares against red's most advanced player, not the deepest one. That's what the
-// original does, so it stays.
-// reds / blues: [{x, y}] for players that have a disc on the pitch
+// La misma regla que usa el cliente, copiada tal cual. Red ataca hacia +x, blue hacia -x.
+//   A) el jugador de red más cercano a la pelota y la pelota pasaron al jugador más retrasado
+//      de blue (x más alta) y la pelota está en x > 20
+//   B) el jugador de blue más cercano y la pelota están a la izquierda del jugador de red con
+//      x más alta y la pelota está en x < -20
+// Sí, B compara contra el jugador más adelantado de red, no el más retrasado. Es lo que hace
+// el original, así que se deja así.
+// reds / blues: [{x, y}] de los jugadores que tienen disco en la cancha
 function dangerFromPositions(ballX, ballY, reds, blues) {
   if (![ballX, ballY].every(Number.isFinite)) throw new Error('bad ball position');
   if (!reds.length || !blues.length) return false;
@@ -65,7 +65,7 @@ function dangerFromPositions(ballX, ballY, reds, blues) {
   return a || b;
 }
 
-// state = node-haxball replayReader.state
+// state = replayReader.state de node-haxball
 function readDanger(state) {
   const ball = state.gameState.physicsState.discs[0];
   const reds = [], blues = [];

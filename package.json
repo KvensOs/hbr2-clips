@@ -1,7 +1,7 @@
 {
   "name": "hbr2-clips",
   "version": "0.3.0",
-  "description": "Render mp4 clips of the goals in HaxBall replays (.hbr2) using the game's own renderer and sounds.",
+  "description": "Renderiza clips mp4 de los goles de repeticiones de HaxBall (.hbr2) usando el renderer y los sonidos del propio juego.",
   "keywords": [
     "haxball",
     "hbr2",
@@ -14,7 +14,9 @@
   "main": "src/extractGoalClip.js",
   "scripts": {
     "extract": "node src/extractGoalClip.js",
-    "test:sample": "node src/extractGoalClip.js samples/sample_replay.hbr2"
+    "test:sample": "node src/extractGoalClip.js samples/sample_replay.hbr2",
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
   },
   "engines": {
     "node": ">=18"
@@ -24,6 +26,10 @@
   "dependencies": {
     "adm-zip": "^0.5.18",
     "canvas": "^3.2.3",
+    "dotenv": "^18.0.2",
+    "express": "^4.22.3",
+    "ffmpeg-static": "^5.3.0",
+    "multer": "^2.4.0",
     "node-haxball": "^2.3.1"
   }
 }

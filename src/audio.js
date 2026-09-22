@@ -1,16 +1,17 @@
 'use strict';
 
-// Builds the audio track of a clip: kick / goal / crowd sounds from res.dat placed at the
-// exact tick of each event, written as a mono 44.1 kHz wav. ffmpeg muxes it into the mp4.
+// Arma la pista de audio de un clip: sonidos de patada/gol/público de res.dat colocados en el
+// tick exacto de cada evento, escritos como wav mono a 44.1 kHz. ffmpeg lo mezcla dentro del mp4.
 const fs = require('fs');
 const { spawnSync } = require('child_process');
+const { FFMPEG_PATH } = require('./framesToVideo');
 
 const SR = 44100;
-// the raw sounds are very quiet inside a video (kick peaks at -13 dB), so boost them and
-// normalize the final mix
+// los sonidos crudos suenan muy bajo dentro de un video (la patada pica en -13 dB), así que se
+// suben y después se normaliza la mezcla final
 const GAIN = { kick: 2.2, goal: 1.5, crowd: 0.9 };
-const TARGET_PEAK = 0.89; // about -1 dBFS
-const FADE_OUT_S = 0.25;  // the clip ends while the crowd is still going
+const TARGET_PEAK = 0.89; // unos -1 dBFS
+const FADE_OUT_S = 0.25;  // el clip termina mientras el público todavía sigue sonando
 
 const decoded = new WeakMap();
 function decodeToFloat(soundBuffer) {
@@ -19,13 +20,13 @@ function decodeToFloat(soundBuffer) {
 }
 
 function decode(soundBuffer) {
-  const r = spawnSync('ffmpeg', ['-v', 'error', '-i', 'pipe:0', '-f', 's16le', '-ac', '1', '-ar', String(SR), 'pipe:1'],
+  const r = spawnSync(FFMPEG_PATH, ['-v', 'error', '-i', 'pipe:0', '-f', 's16le', '-ac', '1', '-ar', String(SR), 'pipe:1'],
     { input: soundBuffer, maxBuffer: 1 << 28 });
-  if (r.error) throw new Error('could not run ffmpeg: ' + r.error.message);
+  if (r.error) throw new Error('could not run ffmpeg (' + FFMPEG_PATH + '): ' + r.error.message);
   if (r.status !== 0) throw new Error('ffmpeg could not decode a sound:\n' + r.stderr);
   const raw = r.stdout;
   if (!raw || raw.length < 4) throw new Error('ffmpeg decoded 0 samples (broken res.dat?)');
-  // copy first, a Buffer can start at an odd offset and Int16Array won't take that
+  // primero se copia: un Buffer puede empezar en un offset impar y un Int16Array no lo acepta
   const ab = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.length - (raw.length % 2));
   const pcm = new Int16Array(ab);
   const out = new Float32Array(pcm.length);
@@ -44,10 +45,10 @@ function writeWav(path, samples) {
   fs.writeFileSync(path, Buffer.concat([h, data]));
 }
 
-// sounds:     { kick, goal, crowd } buffers from loadAssets
-// kicks:      kick times in seconds, relative to the clip start
-// goalT:      goal time in seconds (or null)
-// crowdGains: crowd gain per tick from the clip start (see crowd.js), or null
+// sounds:     buffers { kick, goal, crowd } que vienen de loadAssets
+// kicks:      tiempos de patada en segundos, relativos al inicio del clip
+// goalT:      tiempo del gol en segundos (o null)
+// crowdGains: ganancia del público por tick desde el inicio del clip (ver crowd.js), o null
 function buildTrack({ sounds, durationS, kicks, goalT, crowdGains = null, gainsPerS = 60, outPath }) {
   const out = new Float32Array(Math.ceil(durationS * SR));
   const add = (pcm, tSeg, gain) => {
@@ -64,7 +65,7 @@ function buildTrack({ sounds, durationS, kicks, goalT, crowdGains = null, gainsP
     for (let i = 0; i < out.length; i++) {
       const k = (i / SR) * gainsPerS;
       const k0 = Math.min(Math.floor(k), last), k1 = Math.min(k0 + 1, last);
-      const g = crowdGains[k0] + (crowdGains[k1] - crowdGains[k0]) * (k - k0); // lerp so there are no 60 Hz steps
+      const g = crowdGains[k0] + (crowdGains[k1] - crowdGains[k0]) * (k - k0); // lerp para que no haya escalones de 60 Hz
       if (g > 0.0005) out[i] += bed[i % bed.length] * g * GAIN.crowd;
     }
   }

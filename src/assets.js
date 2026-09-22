@@ -1,15 +1,15 @@
 'use strict';
 
-// Loads what we need from res.dat, the zip the HaxBall client downloads when you open
-// haxball.com/play (Network tab). It's HaxBall's stuff so it is not in the repo, put your own
-// copy in assets/res.dat.
+// Carga lo que necesitamos de res.dat, el zip que descarga el cliente de HaxBall al abrir
+// haxball.com/play (pestaña Network). Es contenido de HaxBall, así que no está en el repo;
+// poné tu propia copia en assets/res.dat.
 const fs = require('fs');
 const AdmZip = require('adm-zip');
 const { loadImage } = require('canvas');
 
 const IMAGES = { grass: 'images/grass.png', concrete: 'images/concrete.png', concrete2: 'images/concrete2.png', typing: 'images/typing.png' };
 const SOUNDS = ['kick', 'goal', 'crowd'];
-// depending on the client version the sounds are .wav or .ogg, ffmpeg reads both
+// según la versión del cliente los sonidos son .wav o .ogg, ffmpeg lee los dos
 const EXTS = ['wav', 'ogg'];
 
 async function loadAssets(resDatPath) {

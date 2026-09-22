@@ -4,13 +4,19 @@ const fs = require('fs');
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 
-// Encodes framesDir/frame_00000.png, frame_00001.png... with ffmpeg (has to be in PATH).
-// Deletes framesDir when done.
+// ruta del binario de ffmpeg: usa FFMPEG_PATH si el usuario puso uno, si no el binario
+// estático que viene como dependencia de npm (ffmpeg-static). Así con un `npm install` alcanza
+// en cualquier plataforma o panel de hosting, sin ffmpeg del sistema ni tocar el PATH.
+const FFMPEG_PATH = process.env.FFMPEG_PATH || require('ffmpeg-static');
+
+// Codifica framesDir/frame_00000.png, frame_00001.png... con ffmpeg (se llama por ruta
+// absoluta, no hace falta que esté en el PATH del sistema). Borra framesDir al terminar.
 //
-// mp4 (default): H.264 High + yuv420p. If audioPath is given the wav goes into the same ffmpeg
-// run as AAC-LC stereo 48 kHz. The pan filter just copies the mono channel to both sides (a
-// plain -ac 2 would drop the level by 3 dB).
-// gif: pass gif = { width }. Two-step palette in one run; width null keeps the frame size.
+// mp4 (por defecto): H.264 High + yuv420p. Si se pasa audioPath, el wav entra en la misma
+// corrida de ffmpeg como AAC-LC estéreo 48 kHz. El filtro pan solo copia el canal mono a los
+// dos lados (un -ac 2 común bajaría el nivel 3 dB).
+// gif: pasar gif = { width }. Paleta en dos pasos dentro de una sola corrida; width null
+// mantiene el tamaño del frame.
 function encodeClip({ framesDir, outFile, fps, audioPath = null, gif = null }) {
   return new Promise((resolve, reject) => {
     if (audioPath && !fs.existsSync(audioPath)) return reject(new Error('audio file not found: ' + audioPath));
@@ -28,10 +34,10 @@ function encodeClip({ framesDir, outFile, fps, audioPath = null, gif = null }) {
       args.push('-movflags', '+faststart', outFile);
     }
 
-    const p = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
+    const p = spawn(FFMPEG_PATH, args, { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
     let err = '';
     p.stderr.on('data', (d) => { err = (err + d).slice(-4000); });
-    p.on('error', (e) => reject(new Error('could not run ffmpeg: ' + e.message)));
+    p.on('error', (e) => reject(new Error('could not run ffmpeg (' + FFMPEG_PATH + '): ' + e.message)));
     p.on('close', (code) => {
       if (code !== 0) return reject(new Error('ffmpeg failed:\n' + err));
       if (audioPath && !hasAudio(outFile)) return reject(new Error('mp4 came out without an audio track: ' + outFile));
@@ -42,8 +48,8 @@ function encodeClip({ framesDir, outFile, fps, audioPath = null, gif = null }) {
 }
 
 function hasAudio(file) {
-  const r = spawnSync('ffmpeg', ['-hide_banner', '-i', file], { encoding: 'utf8' });
+  const r = spawnSync(FFMPEG_PATH, ['-hide_banner', '-i', file], { encoding: 'utf8' });
   return /Stream #\d+:\d+.*Audio:/.test(r.stderr || '');
 }
 
-module.exports = { encodeClip };
+module.exports = { encodeClip, FFMPEG_PATH };

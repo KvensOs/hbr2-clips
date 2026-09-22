@@ -1,14 +1,14 @@
 'use strict';
 
-// Reads the goal list stored inside a .hbr2 file, no simulation needed.
+// Lee la lista de goles guardada dentro de un archivo .hbr2, sin necesidad de simular nada.
 //
-// Layout (big endian):
-//   "HBR2" | version u32 | total ticks u32        plain header
-//   deflate-raw body: goal count u16, then per goal [tick delta varint, team u8],
-//   then the initial state and the input events
+// Formato (big endian):
+//   "HBR2" | version u32 | total de ticks u32     header plano
+//   cuerpo deflate-raw: cantidad de goles u16, luego por gol [delta de tick varint, equipo u8],
+//   después el estado inicial y los eventos de input
 //
-// The team byte is the team that CONCEDED (1 red, 2 blue). The stored tick is one less than
-// what node-haxball gives in onTeamGoal, so `tick` here already has the +1.
+// El byte de equipo es el equipo que RECIBIÓ el gol (1 red, 2 blue). El tick guardado es uno
+// menos que el que da node-haxball en onTeamGoal, así que el `tick` de acá ya tiene el +1.
 const zlib = require('zlib');
 
 function readGoalIndex(data) {
